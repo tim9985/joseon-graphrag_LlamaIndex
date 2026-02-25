@@ -1,116 +1,188 @@
-﻿# 조선왕조 GraphRAG 프로젝트
+# 조선왕조 GraphRAG 웹 애플리케이션 🏯
 
-LlamaIndex + Ollama + Neo4j를 활용한 한국어 역사 텍스트 지식 그래프 구축
+조선왕조 지식 그래프 기반 질의응답 시스템 (React + Flask + Neo4j)
 
-##  빠른 시작 (밀키트 방식)
+## 🚀 빠른 시작
 
-### 1단계: 필수 프로그램 설치
-
-#### Python 3.11+
-https://www.python.org/downloads/
-
-#### Ollama
+### 1단계: Python 의존성 설치
 ```powershell
-winget install Ollama.Ollama
-```
-
-#### Neo4j Desktop
-https://neo4j.com/download/
-- 설치 후 데이터베이스 생성
-- 비밀번호를 **qqqqqqqq**로 설정 (또는 원하는 비밀번호 사용 후 .env 파일 수정)
-- **APOC 플러그인 설치 필수!** (Plugins 탭에서 APOC 설치)
-
-### 2단계: 모델 다운로드 (RTX 5070 최적화)
-
-```powershell
-# 고품질 13B 모델 (권장)
-ollama pull llama3.1:13b
-
-# 또는 빠른 8B 모델
-ollama pull llama3.1:8b
-```
-
-### 3단계: 프로젝트 설정
-
-```powershell
-# 이 폴더에서 실행
-cd joseon_graphrag
-
-# 가상환경 생성
-python -m venv .venv
-
-# 가상환경 활성화
-.venv\Scripts\activate
-
-# 패키지 설치
 pip install -r requirements.txt
-
-# .env 파일 생성 (예제 복사)
-Copy-Item .env.example .env
 ```
 
-### 4단계: 실행!
-
+### 2단계: Node.js 의존성 설치
 ```powershell
-# 단일 파일 처리
-python graph_builder.py input/4.세종.txt
-
-# 전체 26개 왕 일괄 처리
-python batch_process.py
+npm install
 ```
 
-### 5단계: 결과 확인
+### 3단계: 서버 실행
 
-브라우저에서 http://localhost:7474 접속
-
-```cypher
-# 전체 그래프 보기
-MATCH p=()-[r]->() RETURN p LIMIT 100
-
-# 특정 왕 중심 그래프
-MATCH p=(n:Entity {name: '세종'})-[*1..2]-() RETURN p
-```
-
-##  시스템 요구사항
-
-- **RAM**: 32GB (권장)
-- **GPU**: RTX 5070 또는 동급 (12GB+ VRAM)
-- **저장공간**: 20GB 이상
-
-##  성능 설정 (RTX 5070 최적화)
-
-- 모델: llama3.1:13b (8.5GB, 최고 품질)
-- Context Window: 8192 토큰
-- Timeout: 300초
-- GPU 가속 자동 활성화
-
-##  문제 해결
-
-### Ollama 느려짐
+**방법 A: 자동 실행 (권장)**
 ```powershell
-ollama stop
-ollama serve
+.\scripts\start_web.ps1
 ```
 
-### Neo4j 연결 실패
-- Neo4j Desktop에서 데이터베이스 Start 확인
-- APOC 플러그인 설치 확인
+**방법 B: 수동 실행**
+```powershell
+# 터미널 1: 백엔드
+python backend/qa_api.py
 
-### GPU 인식 안됨
-- NVIDIA 드라이버 최신 버전 설치
+# 터미널 2: 프론트엔드
+npm start
+```
 
-##  프로젝트 구조
+브라우저에서 `http://localhost:3000` 자동으로 열림!
+
+---
+
+## 📁 프로젝트 구조
 
 ```
 joseon_graphrag/
- .env                 # 환경 변수 (Neo4j 비밀번호)
- requirements.txt     # Python 패키지
- graph_builder.py     # 단일 파일 처리
- batch_process.py     # 전체 일괄 처리
- input/               # 26개 왕 텍스트 파일
- README.md            # 이 파일
+│
+├── backend/                 # 🐍 Python 백엔드
+│   ├── qa_api.py           # Flask API 서버
+│   └── qa_multimodal.py    # QA 시스템 코어
+│
+├── src/                     # ⚛️ React 프론트엔드
+│   ├── App.js              # 메인 컴포넌트
+│   ├── App.css             # 스타일
+│   └── index.js            # 엔트리 포인트
+│
+├── public/                  # 정적 파일
+│   └── index.html
+│
+├── docs/                    # 📚 문서
+│   ├── QUICKSTART_WEB.md   # 상세 가이드
+│   └── WEB_START.md        # 간단 가이드
+│
+├── scripts/                 # 🔧 실행 스크립트
+│   └── start_web.ps1       # 원클릭 실행
+│
+├── input/                   # 📖 원본 데이터
+│   └── *.txt               # 조선왕조 텍스트
+│
+├── archive/                 # 📦 아카이브 (미사용)
+│   ├── server.js           # 구 Node.js 서버
+│   └── ...                 # 기타 테스트 파일
+│
+├── .env                     # 환경 변수
+├── package.json            # Node.js 설정
+└── requirements.txt        # Python 의존성
 ```
 
-##  문의
+---
 
-문제 발생시 이슈 등록
+## 🎯 주요 기능
+
+### 1️⃣ 다중 검색 모드
+- **하이브리드** (권장): 벡터 + 키워드 + 그래프 통합
+- **벡터 검색**: 의미적 유사도 기반
+- **키워드 검색**: 정확한 키워드 매칭
+- **Cypher 검색**: LLM이 자동 쿼리 생성
+
+### 2️⃣ 실시간 그래프 시각화
+- Mermaid.js 기반 깔끔한 다이어그램
+- 노드 타입별 색상 구분
+- 관계 라벨 표시
+
+### 3️⃣ LLM 기반 답변
+- Ollama (exaone3.5:7.8b) 사용
+- 검색 결과 기반 정확한 답변 생성
+
+---
+
+## ⚙️ 환경 설정
+
+`.env` 파일 확인:
+
+```env
+# Neo4j
+NEO4J_URI=bolt://localhost:7687
+NEO4J_USERNAME=neo4j
+NEO4J_PASSWORD=qqqqqqqq
+NEO4J_DATABASE=youngmin7
+
+# Ollama
+OLLAMA_MODEL=exaone3.5:7.8b
+OLLAMA_BASE_URL=http://localhost:11434
+
+# Flask
+PORT=5001
+```
+
+---
+
+## 📝 사용 예시
+
+### 예시 질문:
+- "세종의 아버지는?"
+- "태종이 편찬한 책은?"
+- "세조의 정치적 경쟁자는?"
+- "임진왜란은 언제 발생했나?"
+
+---
+
+## 🛠️ 기술 스택
+
+| 구분 | 기술 |
+|------|------|
+| **백엔드** | Python, Flask, Neo4j, Ollama |
+| **프론트엔드** | React, Mermaid.js |
+| **임베딩** | SentenceTransformer (ko-sroberta) |
+| **LLM** | Exaone 3.5 (7.8B) |
+| **그래프 DB** | Neo4j |
+
+---
+
+## 📚 문서
+
+- [상세 가이드](docs/QUICKSTART_WEB.md) - 전체 설치 및 설정
+- [빠른 시작](docs/WEB_START.md) - 최소 실행 가이드
+
+---
+
+## 🎨 커스터마이징
+
+### 검색 모드 기본값 변경
+`src/App.js`:
+```javascript
+const [mode, setMode] = useState('hybrid'); // 'vector', 'keyword', 'cypher'
+```
+
+### 그래프 레이아웃 변경
+`src/App.js`:
+```javascript
+graph LR  // Left to Right (현재)
+graph TB  // Top to Bottom (변경 시)
+```
+
+---
+
+## 🐛 문제 해결
+
+### Neo4j 연결 오류
+```powershell
+# Neo4j Desktop에서 youngmin7 데이터베이스 시작 확인
+```
+
+### Ollama 연결 오류
+```powershell
+ollama serve
+ollama pull exaone3.5:7.8b
+```
+
+### 포트 충돌
+```powershell
+# .env 파일에서 PORT 변경
+PORT=5002
+```
+
+---
+
+## 📄 라이선스
+
+MIT License
+
+---
+
+**즐거운 조선왕조 탐험! 🏯**

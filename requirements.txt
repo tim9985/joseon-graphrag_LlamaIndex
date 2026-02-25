@@ -4,3 +4,11 @@ llama-index-embeddings-ollama==0.1.2
 python-dotenv==1.0.0
 neo4j==5.16.0
 tqdm==4.66.1
+sentence-transformers==2.2.2
+torch==2.1.0
+google-generativeai>=0.3.0
+numpy>=1.24.0
+
+# Flask 웹 서버
+flask>=3.0.0
+flask-cors>=4.0.0
